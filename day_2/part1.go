@@ -30,7 +30,7 @@ func windows(nums []int) [][]int {
 	return windows
 }
 
-func findDifference(numOne int, numTwo int) int {
+func findPositiveDifference(numOne int, numTwo int) int {
 	if numOne > numTwo {
 		return numOne - numTwo
 	} else if numOne < numTwo {
@@ -41,7 +41,7 @@ func findDifference(numOne int, numTwo int) int {
 }
 
 func isSafe(report []int) bool {
-	reportWindows := windows(report )
+	reportWindows := windows(report)
 	isIncreasing := true
 
 	first := reportWindows[0]
@@ -58,7 +58,7 @@ func isSafe(report []int) bool {
 	}
 
 	// // guard for asserting number difference
-	leftRightDifference := findDifference(left, right)
+	leftRightDifference := findPositiveDifference(left, right)
 	if leftRightDifference <= 0 || leftRightDifference > 3 {
 		return false
 	}
@@ -78,7 +78,7 @@ func isSafe(report []int) bool {
 		}
 
 		// guard for asserting number difference
-		leftRightDifference := findDifference(left, right)
+		leftRightDifference := findPositiveDifference(left, right)
 		if leftRightDifference <= 0 || leftRightDifference > 3 {
 			return false
 		}

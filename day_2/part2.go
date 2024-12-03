@@ -1,93 +1,101 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
-func getIssues(report []int) int {
+func removeAtIndex(s []int, index int) []int {
+	return append(s[:index], s[index+1:]...)
+}
 
-	isIncreasing := true
+func leftRightDifferenceInBound(left, right int) bool {
+	leftRightDifference := findPositiveDifference(left, right)
+	return leftRightDifference > 0 && leftRightDifference < 4
+}
 
-	// init case
+func checkLeftRight(left, right int, isIncreasing bool) bool {
 
-	left, right := report[0], report[1]
+	if !leftRightDifferenceInBound(left, right) {
+		return false
+	}
+
 	switch {
-	case left > right:
-		isIncreasing = false
-	case left < right:
-		isIncreasing = true
+	case left > right && isIncreasing:
+		return false
+	case left < right && !isIncreasing:
+		return false
 	case left == right:
-		return 0
+		return false
+	}
+
+	return true
+}
+
+func getNextIssueIndex(report []int, isIncreasing bool) int {
+	{
+
+		left := report[0]
+		right := report[1]
+
+		if !leftRightDifferenceInBound(left, right) {
+			return 0
+		}
+
 	}
 
 	for i, left := range report {
-		nextIndex := i + 1
-
-		if nextIndex > len(report)-1 {
-			break
+		rightIndex := i + 1
+		if outOfRange(report, rightIndex) {
+			break // out of range, this has already been checked
 		}
-		right := report[nextIndex]
-
-		if left == right {
-			return i
-		}
-
-		leftRightDifference := findDifference(left, right)
-		if leftRightDifference <= 0 || leftRightDifference > 3 {
-			return i
-		}
-
-		switch {
-		case left > right && isIncreasing:
-			fallthrough
-		case left < right && !isIncreasing:
-			return i
+		right := report[rightIndex]
+		success := checkLeftRight(left, right, isIncreasing)
+		if !success {
+			return i // return the lhs index
 		}
 	}
 	return -1
 }
 
-func removeAtIndex(s []int, index int) []int {
-	rhsIndex := index + 1 
-	if len(s) > 
-	return append(s[:index], s[index+1:]...)
+func outOfRange(s []int, index int) bool {
+	return index > len(s)-1
 }
 
+func testRemoveAtIndex(s []int, indexToRemove int, isIncreasing bool) bool {
+	variant := removeAtIndex(s, indexToRemove)
+	nextIssue := getNextIssueIndex(variant, isIncreasing)
+	return nextIssue == -1
+}
+
+func copySlice(s []int) []int {
+	cpy := make([]int, len(s))
+	copy(cpy, s)
+	return cpy
+}
+
+func considerInDirection(report []int, isIncreasing bool) bool {
+
+	lhsIssueIndex := getNextIssueIndex(report, isIncreasing)
+
+	// no issues
+	if lhsIssueIndex == -1 {
+		return true
+	}
+
+	rhsIssueIndex := lhsIssueIndex + 1
+
+	lhsTestCpy, rhsTestCpy := copySlice(report), copySlice(report)
+
+	return testRemoveAtIndex(lhsTestCpy, lhsIssueIndex, isIncreasing) || testRemoveAtIndex(rhsTestCpy, rhsIssueIndex, isIncreasing)
+}
 func part2(input string) int {
 	lines := strings.Split(input, "\n")
 	lines = lines[:len(lines)-1]
 	count := 0
 	for _, line := range lines {
-		fmt.Printf("Parsing line %v\n", line)
 		report := parseReport(line)
-		leftIssueIndex := getIssues(report)
-		if leftIssueIndex == -1 {
+		if considerInDirection(report, true) || considerInDirection(report, false) {
 			count++
-			continue
-		}
-
-		rightIssueIndex := leftIssueIndex + 1
-
-		var variantOne []int
-		copy(report, variantOne)
-		variantOne = removeAtIndex(variantOne, leftIssueIndex)
-
-		var variantTwo []int
-		copy(report, variantTwo)
-		variantTwo = removeAtIndex(variantTwo, rightIssueIndex)
-
-		fmt.Printf("Variant One: %v\n", variantOne)
-		fmt.Printf("Variant Two: %v\n", variantTwo)
-
-		variantOneIssues := getIssues(variantOne)
-		variantTwoIssues := getIssues(variantTwo)
-
-		if variantOneIssues == -1 || variantTwoIssues == -1 {
-			count++
-		} else {
-			fmt.Printf("Variant One Issue Index: %v\n", variantOneIssues)
-			fmt.Printf("Variant Two Issue Index: %v\n", variantTwoIssues)
 		}
 	}
 	return count
